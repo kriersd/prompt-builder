@@ -1,0 +1,45 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: promptforge:latest
+    container_name: promptforge
+    ports:
+      - "${PORT:-3000}:3000"
+    env_file:
+      - .env                      # must exist; copy .env.example → .env first
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATA_DIR: /data             # persisted via volume below
+    volumes:
+      - prompt-data:/data         # JSON database persisted across restarts
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ── Optional: MongoDB (uncomment to switch from JSON → MongoDB) ─────────────
+  # mongo:
+  #   image: mongo:7
+  #   container_name: promptforge-mongo
+  #   restart: unless-stopped
+  #   environment:
+  #     MONGO_INITDB_DATABASE: promptforge
+  #   volumes:
+  #     - mongo-data:/data/db
+  #   ports:
+  #     - "27017:27017"
+  #
+  # If you enable mongo above, update .env:
+  #   DB_TYPE=mongodb
+  #   MONGODB_URI=mongodb://mongo:27017
+  #   MONGODB_DB_NAME=promptforge
+
+volumes:
+  prompt-data:
+  # mongo-data:   # uncomment when using MongoDB

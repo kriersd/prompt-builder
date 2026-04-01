@@ -1,0 +1,30 @@
+{
+  "name": "prompt-builder",
+  "version": "1.0.0",
+  "description": "Enterprise AI Prompt Builder powered by Claude",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "seed": "node seeds/templates.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.36.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0",
+    "morgan": "^1.10.0",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  },
+  "optionalDependencies": {
+    "mongodb": "^6.16.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

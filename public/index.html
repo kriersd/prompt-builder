@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PromptForge — Enterprise AI Prompt Builder</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/geist@5.1.0/400.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/geist@5.1.0/600.css" />
+
+  <!-- Icons (Lucide) -->
+  <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- ── Sidebar ───────────────────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon"><i data-lucide="sparkles"></i></div>
+      <span class="logo-text">PromptForge</span>
+    </div>
+
+    <p class="nav-section-label">WORKSPACE</p>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-view="editor">
+        <i data-lucide="circle-plus"></i><span>New Prompt</span>
+      </button>
+      <button class="nav-item" data-view="templates">
+        <i data-lucide="layout-template"></i><span>Templates</span>
+      </button>
+      <button class="nav-item" data-view="prompts">
+        <i data-lucide="history"></i><span>My Prompts</span>
+      </button>
+    </nav>
+
+    <p class="nav-section-label" style="margin-top:20px">TOOLS</p>
+    <nav class="sidebar-nav">
+      <button class="nav-item" data-view="library">
+        <i data-lucide="library"></i><span>Library</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-spacer"></div>
+    <div class="sidebar-divider"></div>
+
+    <nav class="sidebar-nav">
+      <button class="nav-item" data-view="settings">
+        <i data-lucide="settings"></i><span>Settings</span>
+      </button>
+    </nav>
+
+    <div class="user-area">
+      <div class="user-avatar">D</div>
+      <div class="user-info">
+        <span class="user-name">David K.</span>
+        <span class="user-plan">Pro Plan</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main area ─────────────────────────────────────────────────────── -->
+  <main class="main-area">
+
+    <!-- Top bar -->
+    <header class="top-bar">
+      <div class="top-bar-title">
+        <h1 id="page-title">New Prompt</h1>
+        <p id="page-subtitle">Build enterprise-grade AI prompts with precision</p>
+      </div>
+      <div class="top-bar-actions" id="editor-actions">
+        <button class="btn btn-secondary" id="btn-save">
+          <i data-lucide="save"></i> Save Draft
+        </button>
+        <button class="btn btn-primary" id="btn-generate">
+          <i data-lucide="sparkles"></i> Generate Prompt
+        </button>
+      </div>
+    </header>
+
+    <!-- ── Editor view ──────────────────────────────────────────────────── -->
+    <div id="view-editor" class="view active">
+      <div class="content-area">
+
+        <!-- Config panel -->
+        <section class="config-panel">
+
+          <!-- Prompt Type -->
+          <div class="form-section">
+            <div class="form-label-row">
+              <span class="form-label">Prompt Type</span>
+              <span class="badge-required">Required</span>
+            </div>
+            <div class="type-pills" id="type-pills">
+              <button class="pill active" data-type="system">System</button>
+              <button class="pill" data-type="task">Task</button>
+              <button class="pill" data-type="few-shot">Few-Shot</button>
+              <button class="pill" data-type="chain-of-thought">Chain of Thought</button>
+              <button class="pill" data-type="react">ReAct</button>
+            </div>
+          </div>
+
+          <!-- AI Role & Context -->
+          <div class="form-section">
+            <label class="form-label">AI Role &amp; Context</label>
+            <div class="input-card">
+              <div class="input-card-row">
+                <i data-lucide="bot" class="input-icon"></i>
+                <textarea
+                  id="input-role"
+                  class="card-textarea"
+                  rows="2"
+                  placeholder="You are a senior enterprise software architect with expertise in…"
+                ></textarea>
+              </div>
+              <div class="card-divider"></div>
+              <div class="role-tags" id="role-tags">
+                <span class="tag-hint">Role traits:</span>
+                <div id="trait-list" class="trait-list"></div>
+                <button class="tag-add" id="btn-add-trait">+ Add trait</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Task Description -->
+          <div class="form-section">
+            <div class="form-label-row">
+              <label class="form-label" for="input-task">Task Description</label>
+              <button class="btn-link" id="btn-enhance">
+                <i data-lucide="wand"></i> AI Enhance
+              </button>
+            </div>
+            <div class="textarea-card">
+              <textarea
+                id="input-task"
+                rows="5"
+                placeholder="Describe what you want the AI to do in detail…"
+                maxlength="2000"
+              ></textarea>
+            </div>
+            <div class="textarea-footer">
+              <span id="char-count">0 / 2000 characters</span>
+            </div>
+          </div>
+
+          <!-- Tone & Format row -->
+          <div class="form-row">
+            <div class="form-section">
+              <label class="form-label">Tone &amp; Style</label>
+              <div class="select-card" id="select-tone">
+                <div class="select-left">
+                  <i data-lucide="message-square" class="input-icon"></i>
+                  <span id="tone-display">Professional &amp; Precise</span>
+                </div>
+                <i data-lucide="chevron-down" class="select-chevron"></i>
+              </div>
+              <div class="dropdown" id="dropdown-tone">
+                <button class="dropdown-item" data-value="Professional &amp; Precise">Professional &amp; Precise</button>
+                <button class="dropdown-item" data-value="Technical &amp; Detailed">Technical &amp; Detailed</button>
+                <button class="dropdown-item" data-value="Concise &amp; Direct">Concise &amp; Direct</button>
+                <button class="dropdown-item" data-value="Analytical &amp; Structured">Analytical &amp; Structured</button>
+                <button class="dropdown-item" data-value="Creative &amp; Exploratory">Creative &amp; Exploratory</button>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <label class="form-label">Output Format</label>
+              <div class="select-card" id="select-format">
+                <div class="select-left">
+                  <i data-lucide="file-text" class="input-icon"></i>
+                  <span id="format-display">Structured Markdown</span>
+                </div>
+                <i data-lucide="chevron-down" class="select-chevron"></i>
+              </div>
+              <div class="dropdown" id="dropdown-format">
+                <button class="dropdown-item" data-value="Structured Markdown">Structured Markdown</button>
+                <button class="dropdown-item" data-value="Plain Text">Plain Text</button>
+                <button class="dropdown-item" data-value="JSON Schema">JSON Schema</button>
+                <button class="dropdown-item" data-value="Numbered List">Numbered List</button>
+                <button class="dropdown-item" data-value="Executive Report">Executive Report</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Advanced Settings -->
+          <div class="advanced-section" id="advanced-section">
+            <button class="advanced-header" id="btn-advanced" aria-expanded="false">
+              <div class="advanced-header-left">
+                <i data-lucide="sliders-horizontal"></i>
+                <span>Advanced Settings</span>
+              </div>
+              <i data-lucide="chevron-down" id="advanced-chevron"></i>
+            </button>
+            <div class="advanced-body collapsed" id="advanced-body">
+              <div class="form-row" style="margin-top:14px">
+                <div class="form-group">
+                  <label class="form-sublabel" for="input-constraints">Constraints</label>
+                  <input
+                    type="text"
+                    id="input-constraints"
+                    class="input-field"
+                    placeholder="Max 500 words, cite sources…"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-sublabel">Target Model</label>
+                  <div class="select-card" id="select-model">
+                    <span id="model-display" class="mono">claude-sonnet-4-6</span>
+                    <i data-lucide="chevron-down" class="select-chevron"></i>
+                  </div>
+                  <div class="dropdown" id="dropdown-model">
+                    <button class="dropdown-item mono" data-value="claude-opus-4-6">claude-opus-4-6</button>
+                    <button class="dropdown-item mono" data-value="claude-sonnet-4-6">claude-sonnet-4-6</button>
+                    <button class="dropdown-item mono" data-value="claude-haiku-4-5-20251001">claude-haiku-4-5-20251001</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </section><!-- /config-panel -->
+
+        <!-- Preview panel -->
+        <section class="preview-panel">
+
+          <div class="preview-header">
+            <div>
+              <h2 class="preview-title">Generated Prompt</h2>
+              <p class="preview-subtitle">Live preview · Auto-updates on generate</p>
+            </div>
+            <div class="preview-actions">
+              <div class="quality-badge" id="quality-badge">
+                <div class="quality-dot" id="quality-dot"></div>
+                <span id="quality-score-text">Score: --</span>
+              </div>
+              <button class="btn btn-secondary btn-sm" id="btn-copy">
+                <i data-lucide="copy"></i> Copy
+              </button>
+              <button class="btn btn-secondary btn-sm" id="btn-export">
+                <i data-lucide="download"></i> Export
+              </button>
+            </div>
+          </div>
+
+          <div class="output-editor">
+            <div class="output-title-bar">
+              <div class="traffic-lights">
+                <div class="tl tl-red"></div>
+                <div class="tl tl-yellow"></div>
+                <div class="tl tl-green"></div>
+              </div>
+              <span class="output-filename" id="output-filename">prompt.md</span>
+            </div>
+            <div class="output-content" id="output-content">
+              <div class="output-empty" id="output-empty">
+                <div class="empty-icon"><i data-lucide="sparkles"></i></div>
+                <p>Fill in the configuration and click <strong>Generate Prompt</strong> to create your enterprise-grade prompt.</p>
+              </div>
+              <div id="output-blocks" class="output-blocks" hidden></div>
+            </div>
+          </div>
+
+          <div class="metrics-bar">
+            <div class="metric-card">
+              <div class="metric-top">
+                <span class="metric-label">Clarity</span>
+                <span class="metric-score clarity" id="metric-clarity">--</span>
+              </div>
+              <div class="metric-track"><div class="metric-fill clarity" id="fill-clarity" style="width:0%"></div></div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-top">
+                <span class="metric-label">Specificity</span>
+                <span class="metric-score specificity" id="metric-specificity">--</span>
+              </div>
+              <div class="metric-track"><div class="metric-fill specificity" id="fill-specificity" style="width:0%"></div></div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-top">
+                <span class="metric-label">Completeness</span>
+                <span class="metric-score completeness" id="metric-completeness">--</span>
+              </div>
+              <div class="metric-track"><div class="metric-fill completeness" id="fill-completeness" style="width:0%"></div></div>
+            </div>
+          </div>
+
+        </section><!-- /preview-panel -->
+      </div><!-- /content-area -->
+    </div><!-- /view-editor -->
+
+    <!-- ── My Prompts view ──────────────────────────────────────────────── -->
+    <div id="view-prompts" class="view">
+      <div class="list-view">
+        <div class="list-header">
+          <div>
+            <h2>My Prompts</h2>
+            <p class="list-subtitle">Your saved prompt collection</p>
+          </div>
+          <button class="btn btn-primary" id="btn-new-from-prompts">
+            <i data-lucide="plus"></i> New Prompt
+          </button>
+        </div>
+        <div id="prompts-list" class="cards-grid">
+          <div class="list-empty"><i data-lucide="inbox"></i><p>No saved prompts yet. Generate one and click Save Draft.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Templates view ───────────────────────────────────────────────── -->
+    <div id="view-templates" class="view">
+      <div class="list-view">
+        <div class="list-header">
+          <div>
+            <h2>Templates</h2>
+            <p class="list-subtitle">Start fast with a pre-built enterprise template</p>
+          </div>
+        </div>
+        <div id="templates-list" class="cards-grid">
+          <div class="list-empty"><i data-lucide="loader"></i><p>Loading templates…</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Library view (placeholder) ──────────────────────────────────── -->
+    <div id="view-library" class="view">
+      <div class="list-view">
+        <div class="list-header"><div><h2>Library</h2><p class="list-subtitle">Coming soon — browse community prompts</p></div></div>
+        <div class="placeholder-view"><i data-lucide="library"></i><p>Library coming in a future release.</p></div>
+      </div>
+    </div>
+
+    <!-- ── Settings view (placeholder) ─────────────────────────────────── -->
+    <div id="view-settings" class="view">
+      <div class="list-view">
+        <div class="list-header"><div><h2>Settings</h2></div></div>
+        <div class="settings-grid">
+          <div class="settings-card">
+            <h3>API Configuration</h3>
+            <p>The Anthropic API key and model are configured via the <code>.env</code> file on the server.</p>
+            <input type="password" id="input-api-token" class="input-field" placeholder="Optional APP_API_TOKEN for protected routes" />
+            <div class="modal-actions">
+              <button class="btn btn-secondary" id="btn-save-api-token">Save API Token</button>
+            </div>
+          </div>
+          <div class="settings-card">
+            <h3>Database</h3>
+            <p>Currently using the local JSON store. Set <code>DB_TYPE=mongodb</code> in <code>.env</code> to switch to MongoDB.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div><!-- /app -->
+
+<!-- ── Trait input modal ─────────────────────────────────────────────── -->
+<div class="modal-overlay" id="trait-modal" hidden>
+  <div class="modal">
+    <h3>Add Role Trait</h3>
+    <input type="text" id="trait-input" class="input-field" placeholder="e.g. Security-focused, 10+ years exp" />
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btn-trait-cancel">Cancel</button>
+      <button class="btn btn-primary" id="btn-trait-confirm">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast ─────────────────────────────────────────────────────────── -->
+<div class="toast" id="toast" hidden></div>
+
+<script type="module" src="/js/api.js"></script>
+<script type="module" src="/js/main.js"></script>
+</body>
+</html>

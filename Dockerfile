@@ -22,7 +22,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --chown=promptforge:promptforge . .
 
 # Ensure data directory exists and is writable by the app user
-RUN mkdir -p /data && chown promptforge:promptforge /data
+RUN mkdir -p /app/data && chown promptforge:promptforge /app/data
 
 USER promptforge
 
@@ -30,7 +30,8 @@ EXPOSE 3000
 
 # DATA_DIR points outside /app so it can be mounted as a volume
 ENV NODE_ENV=production \
+    HOST=0.0.0.0 \
     PORT=3000 \
-    DATA_DIR=/data
+    DATA_DIR=/app/data
 
 CMD ["node", "server.js"]

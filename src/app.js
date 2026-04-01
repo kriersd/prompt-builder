@@ -24,6 +24,7 @@ export function createApp() {
   app.disable('x-powered-by')
   app.set('trust proxy', process.env.TRUST_PROXY === 'true')
   app.use(helmet({
+    hsts: false,
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],

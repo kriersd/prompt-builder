@@ -5,6 +5,6 @@ set -euo pipefail
 IMAGE_NAME="localhost/prompt-builder"
 TAG="latest"
 # The dot (.) specifies that the Dockerfile is in the current directory
-docker build -t "${IMAGE_NAME}:${TAG}" .
+docker build --no-cache -t "${IMAGE_NAME}:${TAG}" .
 
 echo "Successfully built Docker image: ${IMAGE_NAME}:${TAG}"

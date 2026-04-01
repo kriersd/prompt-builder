@@ -37,6 +37,7 @@ export function createApp() {
         baseUri: ["'self'"],
         frameAncestors: ["'none'"],
         formAction: ["'self'"],
+        upgradeInsecureRequests: null,
       },
     },
     crossOriginEmbedderPolicy: false,

@@ -96,7 +96,12 @@
           <div class="form-section">
             <div class="form-label-row">
               <span class="form-label">Prompt Type</span>
-              <span class="badge-required">Required</span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <button class="btn-icon-sm" id="btn-type-info" title="Learn about prompt types" aria-label="Prompt type descriptions">
+                  <i data-lucide="circle-help"></i>
+                </button>
+                <span class="badge-required">Required</span>
+              </div>
             </div>
             <div class="type-pills" id="type-pills">
               <button class="pill active" data-type="system">System</button>
@@ -263,6 +268,10 @@
                 <div class="empty-icon"><i data-lucide="sparkles"></i></div>
                 <p>Fill in the configuration and click <strong>Generate Prompt</strong> to create your enterprise-grade prompt.</p>
               </div>
+              <div class="output-loaded-notice" id="output-loaded-notice" hidden>
+                <i data-lucide="check-circle-2"></i>
+                <span>The loaded prompt can be modified and regenerated.</span>
+              </div>
               <div id="output-blocks" class="output-blocks" hidden></div>
             </div>
           </div>
@@ -359,6 +368,38 @@
 
   </main>
 </div><!-- /app -->
+
+<!-- ── Prompt type info modal ─────────────────────────────────────── -->
+<div class="modal-overlay" id="type-info-modal" hidden>
+  <div class="modal modal--wide">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <h3>Prompt Types</h3>
+      <button class="btn-icon-sm" id="btn-type-info-close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="type-info-list">
+      <div class="type-info-card">
+        <div class="type-info-header"><span class="type-info-badge">System</span></div>
+        <p class="type-info-desc">Sets persistent instructions the AI follows for every response — role, tone, rules, and boundaries. Best for configuring an assistant's overall behavior.</p>
+      </div>
+      <div class="type-info-card">
+        <div class="type-info-header"><span class="type-info-badge">Task</span></div>
+        <p class="type-info-desc">Describes a specific one-time job: writing, coding, analysis, summarization. The AI focuses entirely on completing the defined task.</p>
+      </div>
+      <div class="type-info-card">
+        <div class="type-info-header"><span class="type-info-badge">Few-Shot</span></div>
+        <p class="type-info-desc">Teaches the AI the desired output pattern by providing example input/output pairs. Effective when format or style consistency is critical.</p>
+      </div>
+      <div class="type-info-card">
+        <div class="type-info-header"><span class="type-info-badge">Chain of Thought</span></div>
+        <p class="type-info-desc">Instructs the AI to reason step-by-step before giving a final answer. Improves accuracy on complex, multi-step problems and logical tasks.</p>
+      </div>
+      <div class="type-info-card">
+        <div class="type-info-header"><span class="type-info-badge">ReAct</span></div>
+        <p class="type-info-desc">Combines reasoning and acting — the AI plans, calls tools, observes results, and iterates. Ideal for agentic workflows that interact with external systems.</p>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ── Trait input modal ─────────────────────────────────────────────── -->
 <div class="modal-overlay" id="trait-modal" hidden>

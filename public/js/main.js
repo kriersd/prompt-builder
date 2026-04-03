@@ -66,6 +66,11 @@ function initTypePills() {
     pill.classList.add('active')
     state.promptType = pill.dataset.type
   })
+
+  const modal = $('type-info-modal')
+  $('btn-type-info').addEventListener('click', () => { modal.hidden = false })
+  $('btn-type-info-close').addEventListener('click', () => { modal.hidden = true })
+  modal.addEventListener('click', e => { if (e.target === modal) modal.hidden = true })
 }
 
 // ── Role traits ───────────────────────────────────────────────────────────────
@@ -225,9 +230,10 @@ async function generatePrompt() {
   setGenerating(true)
 
   // Show output area
-  $('output-empty').hidden  = true
-  $('output-blocks').hidden = false
-  $('output-blocks').innerHTML = ''
+  $('output-empty').hidden         = true
+  $('output-loaded-notice').hidden = true
+  $('output-blocks').hidden        = false
+  $('output-blocks').innerHTML     = ''
 
   // Add streaming block
   const streamBlock = document.createElement('div')
@@ -552,8 +558,9 @@ function applyPromptConfig(p) {
   // Generated prompt (if re-loading a saved prompt)
   if (p.generatedPrompt) {
     state.generatedPrompt = p.generatedPrompt
-    $('output-empty').hidden  = true
-    $('output-blocks').hidden = false
+    $('output-empty').hidden         = true
+    $('output-loaded-notice').hidden = false
+    $('output-blocks').hidden        = false
     renderOutputBlocks(p.generatedPrompt)
     $('output-filename').textContent = promptFilename()
   }

@@ -135,8 +135,8 @@ export async function generatePromptStream(config, onChunk) {
 export async function enhanceTask(taskDescription) {
   const msg = await client.messages.create({
     model: MODEL(),
-    max_tokens: 512,
-    system: `You are an expert at writing precise, actionable task descriptions for AI prompts. Rewrite the provided description to be clearer, more specific, and enterprise-ready. Return ONLY the enhanced description.`,
+    max_tokens: 700,
+    system: `You are an expert at writing precise, actionable task descriptions for AI prompts. Rewrite the provided description to be clearer, more specific, and enterprise-ready. Return ONLY the enhanced description. Keep the output under 2000 characters.`,
     messages: [{ role: 'user', content: `Enhance this task description:\n\n${taskDescription}` }],
   })
   return msg.content[0].text

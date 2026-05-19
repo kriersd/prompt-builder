@@ -36,21 +36,25 @@ function buildGeneratorUserMessage(config) {
     outputFormat = 'Structured Markdown',
     constraints = '',
     targetModel = 'claude-sonnet-4-6',
+    personaContext = '',
   } = config
 
-  const typLabel   = PROMPT_TYPE_LABELS[type] ?? 'System Prompt'
-  const traitsStr  = roleTraits.length ? `\nRole traits: ${roleTraits.join(', ')}` : ''
+  const typLabel       = PROMPT_TYPE_LABELS[type] ?? 'System Prompt'
+  const traitsStr      = roleTraits.length ? `\nRole traits: ${roleTraits.join(', ')}` : ''
+  const personaSection = personaContext
+    ? `**Who is asking (user persona):** ${personaContext}\n\n`
+    : ''
 
   return `Generate a ${typLabel} with the following specifications:
 
-**AI Role:** ${role || 'Not specified'}${traitsStr}
+${personaSection}**AI Role:** ${role || 'Not specified'}${traitsStr}
 **Task:** ${taskDescription || 'Not specified'}
 **Tone & Style:** ${tone}
 **Output Format:** ${outputFormat}
 **Constraints:** ${constraints || 'None'}
 **Target Model:** ${targetModel}
 
-Produce a complete, production-ready prompt an enterprise team would confidently deploy. Include all necessary sections, context, and instructions.`
+Produce a complete, production-ready prompt an enterprise team would confidently deploy. Include all necessary sections, context, and instructions. If a user persona is provided, tailor the prompt's assumptions and technical depth to match that audience.`
 }
 
 // ─── Prompt Scoring ───────────────────────────────────────────────────────────

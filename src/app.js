@@ -7,6 +7,8 @@ import { dirname, join }  from 'path'
 
 import promptRoutes   from './routes/prompts.js'
 import templateRoutes from './routes/templates.js'
+import personaRoutes  from './routes/personas.js'
+import roleRoutes     from './routes/roles.js'
 import aiRoutes       from './routes/ai.js'
 import { errorHandler } from './middleware/errorHandler.js'
 
@@ -62,6 +64,8 @@ export function createApp() {
   // ── API routes ────────────────────────────────────────────────────────────
   app.use('/api/prompts',   promptRoutes)
   app.use('/api/templates', templateRoutes)
+  app.use('/api/personas',  personaRoutes)
+  app.use('/api/roles',     roleRoutes)
   app.use('/api/ai',        aiRoutes)
 
   // ── Health check ──────────────────────────────────────────────────────────

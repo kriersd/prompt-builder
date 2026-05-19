@@ -1,17 +1,20 @@
 # PromptForge
 
-Enterprise AI Prompt Builder powered by Claude. Build, refine, save, and export production-grade prompts for AI-powered applications.
+Enterprise AI Prompt Builder powered by Claude. Build, refine, save, and export production-grade AI prompts tailored to your role and context.
 
 ---
 
 ## Features
 
-- **Streaming prompt generation** via Claude (SSE)
+- **Streaming prompt generation** via Claude (SSE) with live token output
 - **AI Enhance** — let Claude sharpen your task description before generating
 - **Quality scoring** — automatic Clarity, Specificity, and Completeness metrics
-- **6 built-in enterprise templates** (Code Review, Architecture Analysis, Security Audit, and more)
+- **9 built-in enterprise templates** across Engineering, Documentation, Security, and Reasoning categories
+- **12 built-in role presets** (Application Developer, DBA, DevOps, Security Engineer, Solutions Architect, Technical Sales, and more) grouped by Engineering / Architecture / Business
+- **Persona context** — select a Role or create a custom Persona; the context is injected into every generate call so prompts are tailored to your background and expertise
 - **Save & load** — full prompt history in a local JSON store
-- **One-click export** to `.md`
+- **Export** — file format (`.md`, `.txt`, `.json`) and MIME type driven by selected Output Format
+- **Copy to clipboard** — works over both HTTPS and plain HTTP (Docker)
 - **MongoDB-ready** — swap the JSON store for MongoDB with a single env variable
 
 ---
@@ -24,7 +27,7 @@ npm install
 
 # 2. Configure environment
 cp .env.example .env
-# Edit .env and set your ANTHROPIC_API_KEY
+# Edit .env — set ANTHROPIC_API_KEY at minimum
 
 # 3. Start the server
 npm run dev          # development (nodemon watch)
@@ -33,6 +36,8 @@ npm start            # production
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+On first startup the server seeds all built-in templates and role presets automatically.
 
 ---
 
@@ -46,7 +51,8 @@ Copy `.env.example` → `.env` and fill in the values. **Never commit `.env`.**
 | `CLAUDE_MODEL` | No | `claude-sonnet-4-6` | Model used for generation & analysis |
 | `PORT` | No | `3000` | HTTP port |
 | `NODE_ENV` | No | `development` | `development` or `production` |
-| `DB_TYPE` | No | `json` | `json` (local) or `mongodb` |
+| `APP_API_TOKEN` | No | — | Optional bearer token to protect write/AI routes |
+| `DB_TYPE` | No | `json` | `json` (local file) or `mongodb` |
 | `DATA_DIR` | No | `./data` | Path for JSON data files (JSON mode only) |
 | `MONGODB_URI` | MongoDB only | — | e.g. `mongodb://localhost:27017` |
 | `MONGODB_DB_NAME` | MongoDB only | `promptforge` | Database name |
@@ -54,25 +60,6 @@ Copy `.env.example` → `.env` and fill in the values. **Never commit `.env`.**
 ---
 
 ## Running with Docker
-
-### Build and run (single container)
-
-```bash
-# Copy and configure your env file
-cp .env.example .env
-# Set ANTHROPIC_API_KEY in .env
-
-# Build the image
-docker build -t promptforge .
-
-# Run with a named volume so JSON data persists
-docker run -d \
-  --name promptforge \
-  -p 3000:3000 \
-  --env-file .env \
-  -v promptforge-data:/data \
-  promptforge
-```
 
 ### Using Docker Compose (recommended)
 
@@ -89,15 +76,39 @@ docker compose logs -f
 docker compose down
 ```
 
-Data is persisted in the `prompt-data` named volume across restarts.
+Data is persisted in the `prompt-data` named volume across restarts and rebuilds.
+
+### Single container
+
+```bash
+cp .env.example .env
+# Set ANTHROPIC_API_KEY in .env
+
+docker build -t promptforge .
+
+docker run -d \
+  --name promptforge \
+  -p 3000:3000 \
+  --env-file .env \
+  -v promptforge-data:/data \
+  promptforge
+```
+
+### Rebuild after code changes
+
+```bash
+docker compose down
+docker compose build --no-cache
+docker compose up -d
+```
 
 ---
 
 ## Switching to MongoDB
 
-PromptForge's database layer is a thin abstraction that mirrors the MongoDB Node.js driver API. To migrate:
+PromptForge's database layer mirrors the MongoDB Node.js driver API. Swapping stores requires no code changes.
 
-1. Set the following in `.env`:
+1. Update `.env`:
 
 ```dotenv
 DB_TYPE=mongodb
@@ -105,19 +116,17 @@ MONGODB_URI=mongodb://localhost:27017
 MONGODB_DB_NAME=promptforge
 ```
 
-2. Install the MongoDB driver:
+2. Install the driver:
 
 ```bash
 npm install mongodb
 ```
 
-3. Restart the server. Templates will be re-seeded automatically.
-
-The `data/` directory and `MongoStore.js` are designed so that all document schemas (`_id` as UUID strings, `createdAt`/`updatedAt` ISO timestamps, array/nested fields) are directly compatible with MongoDB without any migration script.
+3. Restart. Templates and role presets are re-seeded automatically (idempotent).
 
 ### With Docker Compose + MongoDB
 
-Uncomment the `mongo` service and `mongo-data` volume in `docker-compose.yml`, then update your `.env` to `DB_TYPE=mongodb` and `MONGODB_URI=mongodb://mongo:27017`.
+Uncomment the `mongo` service and `mongo-data` volume in `docker-compose.yml`, then set `DB_TYPE=mongodb` and `MONGODB_URI=mongodb://mongo:27017` in `.env`.
 
 ---
 
@@ -129,7 +138,7 @@ Uncomment the `mongo` service and `mongo-data` volume in `docker-compose.yml`, t
 |---|---|---|
 | `GET` | `/api/prompts` | List saved prompts (`?page=1&limit=20&sort=desc`) |
 | `GET` | `/api/prompts/:id` | Get a single prompt |
-| `POST` | `/api/prompts` | Create a prompt |
+| `POST` | `/api/prompts` | Save a prompt |
 | `PUT` | `/api/prompts/:id` | Update a prompt |
 | `DELETE` | `/api/prompts/:id` | Delete a prompt |
 
@@ -141,7 +150,26 @@ Uncomment the `mongo` service and `mongo-data` volume in `docker-compose.yml`, t
 | `GET` | `/api/templates/:id` | Get a single template |
 | `POST` | `/api/templates` | Create a custom template |
 | `PUT` | `/api/templates/:id` | Update a custom template |
-| `DELETE` | `/api/templates/:id` | Delete a custom template (built-ins protected) |
+| `DELETE` | `/api/templates/:id` | Delete custom template (built-ins protected) |
+
+### Roles
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/roles` | List role presets (`?category=Engineering`) |
+| `GET` | `/api/roles/:id` | Get a single role |
+| `POST` | `/api/roles` | Create a custom role |
+| `DELETE` | `/api/roles/:id` | Delete custom role (built-ins protected) |
+
+### Personas
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/personas` | List saved personas |
+| `GET` | `/api/personas/:id` | Get a single persona |
+| `POST` | `/api/personas` | Create a persona |
+| `PUT` | `/api/personas/:id` | Update a persona |
+| `DELETE` | `/api/personas/:id` | Delete a persona |
 
 ### AI
 
@@ -150,7 +178,7 @@ Uncomment the `mongo` service and `mongo-data` volume in `docker-compose.yml`, t
 | `POST` | `/api/ai/generate` | Generate prompt (SSE stream) |
 | `POST` | `/api/ai/enhance` | AI-enhance a task description |
 
-#### POST `/api/ai/generate` — Request body
+#### `POST /api/ai/generate` — Request body
 
 ```json
 {
@@ -161,9 +189,12 @@ Uncomment the `mongo` service and `mongo-data` volume in `docker-compose.yml`, t
   "tone": "Professional & Precise",
   "outputFormat": "Structured Markdown",
   "constraints": "Max 500 words",
-  "targetModel": "claude-sonnet-4-6"
+  "targetModel": "claude-sonnet-4-6",
+  "personaContext": "I am a senior platform engineer at a fintech SaaS company…"
 }
 ```
+
+`personaContext` is optional. When provided, the generator tailors the prompt's technical depth and assumptions to match that background.
 
 #### SSE event types
 
@@ -180,32 +211,38 @@ data: [DONE]
 ```
 prompt-builder/
 ├── src/
-│   ├── app.js                  # Express app factory
+│   ├── app.js                  # Express app factory; registers all routes
 │   ├── db/
 │   │   ├── JsonStore.js        # Local JSON DB (MongoDB-compatible interface)
-│   │   ├── MongoStore.js       # MongoDB adapter (swap-in)
-│   │   └── index.js            # DB factory (reads DB_TYPE from env)
+│   │   ├── MongoStore.js       # MongoDB adapter (swap-in, same interface)
+│   │   └── index.js            # DB factory (reads DB_TYPE env var)
 │   ├── middleware/
+│   │   ├── apiSecurity.js      # Rate limiting + optional bearer token auth
 │   │   └── errorHandler.js
 │   ├── routes/
-│   │   ├── ai.js               # /api/ai/*
+│   │   ├── ai.js               # /api/ai/generate (SSE) + /api/ai/enhance
 │   │   ├── prompts.js          # /api/prompts/*
-│   │   └── templates.js        # /api/templates/*
-│   └── services/
-│       └── aiService.js        # Anthropic SDK integration
+│   │   ├── templates.js        # /api/templates/*
+│   │   ├── roles.js            # /api/roles/*
+│   │   └── personas.js         # /api/personas/*
+│   ├── services/
+│   │   └── aiService.js        # Anthropic SDK — streaming generation, scoring, enhance
+│   └── validation/
+│       └── payloads.js         # Input sanitisation for all routes
 ├── seeds/
-│   └── templates.js            # Default enterprise templates
+│   ├── templates.js            # 9 default enterprise prompt templates
+│   └── roles.js                # 12 default role presets (Engineering/Architecture/Business)
 ├── public/
 │   ├── index.html
 │   ├── css/styles.css
 │   └── js/
-│       ├── api.js              # Fetch wrappers
-│       └── main.js             # UI logic & state
+│       ├── api.js              # Fetch wrappers (promptsApi, templatesApi, rolesApi, personasApi, aiApi)
+│       └── main.js             # All UI logic, state management, SSE handling
 ├── data/                       # JSON data files (gitignored)
-├── server.js                   # Entry point
+├── server.js                   # Entry point — connects DB, runs seeds, starts Express
 ├── Dockerfile
 ├── docker-compose.yml
-├── .env.example                # Committed — sample config
+├── .env.example                # Committed sample config
 └── .env                        # NOT committed — real secrets
 ```
 
@@ -213,6 +250,8 @@ prompt-builder/
 
 ## Development Notes
 
-- The JSON store reads/writes synchronously on every mutation. It is designed for a single-user local tool. For concurrent or high-volume use, migrate to MongoDB.
-- Template seeding runs on every startup but skips documents that already exist (idempotent).
-- The frontend uses ES modules (no build step required). All assets are served directly by Express from `public/`.
+- **JSON store** reads/writes on every mutation. Designed for single-user local use. Migrate to MongoDB for concurrent or high-volume deployments.
+- **Seeding** runs on every startup but skips documents that already exist (fully idempotent). Safe to restart freely.
+- **Frontend** uses ES modules with no build step. Assets are served directly by Express from `public/`.
+- **Persona context** flows: UI state → `buildConfig()` → `POST /api/ai/generate` body → `validateAiGeneratePayload` → `buildGeneratorUserMessage` → Claude API. Removing a persona simply sends an empty string.
+- **Export formats** map Output Format → file extension + MIME type: Structured Markdown → `.md`, Plain Text → `.txt`, JSON Schema → `.json`, Numbered List → `.txt`, Executive Report → `.md`.

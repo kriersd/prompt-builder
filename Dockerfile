@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Copy manifests first for layer caching
 COPY package*.json ./
-RUN if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi
+RUN if [ -f package-lock.json ]; then npm ci --omit=dev --loglevel=error --no-update-notifier; else npm install --omit=dev --loglevel=error --no-update-notifier; fi
 
 # ── Runtime stage ─────────────────────────────────────────────────────────────
 FROM node:22-alpine AS runtime
@@ -21,17 +21,18 @@ COPY --from=deps /app/node_modules ./node_modules
 # Copy application source
 COPY --chown=promptforge:promptforge . .
 
-# Ensure data directory exists and is writable by the app user
-RUN mkdir -p /app/data && chown promptforge:promptforge /app/data
+# Create the data directory at the path used by docker-compose volumes (/data).
+# Initialising it here ensures the named volume inherits the correct ownership
+# on first mount, so the non-root user can write to it.
+RUN mkdir -p /data && chown promptforge:promptforge /data
 
 USER promptforge
 
 EXPOSE 3000
 
-# DATA_DIR points outside /app so it can be mounted as a volume
 ENV NODE_ENV=production \
     HOST=0.0.0.0 \
     PORT=3000 \
-    DATA_DIR=/app/data
+    DATA_DIR=/data
 
 CMD ["node", "server.js"]

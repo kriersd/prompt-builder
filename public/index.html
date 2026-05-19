@@ -36,8 +36,14 @@
       <button class="nav-item" data-view="templates">
         <i data-lucide="layout-template"></i><span>Templates</span>
       </button>
+      <button class="nav-item" data-view="roles">
+        <i data-lucide="briefcase"></i><span>Roles</span>
+      </button>
       <button class="nav-item" data-view="prompts">
         <i data-lucide="history"></i><span>My Prompts</span>
+      </button>
+      <button class="nav-item" data-view="personas">
+        <i data-lucide="user-round"></i><span>Personas</span>
       </button>
     </nav>
 
@@ -91,6 +97,24 @@
 
         <!-- Config panel -->
         <section class="config-panel">
+
+          <!-- My Persona -->
+          <div class="form-section">
+            <div class="form-label-row">
+              <span class="form-label">My Persona</span>
+              <button class="btn-link" id="btn-manage-personas">
+                <i data-lucide="settings-2"></i> Manage
+              </button>
+            </div>
+            <div class="select-card" id="select-persona">
+              <div class="select-left">
+                <i data-lucide="user-round" class="input-icon"></i>
+                <span id="persona-display">No persona — prompts are generic</span>
+              </div>
+              <i data-lucide="chevron-down" class="select-chevron"></i>
+            </div>
+            <div class="dropdown" id="dropdown-persona"></div>
+          </div>
 
           <!-- Prompt Type -->
           <div class="form-section">
@@ -330,9 +354,44 @@
             <h2>Templates</h2>
             <p class="list-subtitle">Start fast with a pre-built enterprise template</p>
           </div>
+          <button class="btn btn-primary" id="btn-new-template"><i data-lucide="plus"></i> New Template</button>
         </div>
         <div id="templates-list" class="cards-grid">
           <div class="list-empty"><i data-lucide="loader"></i><p>Loading templates…</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Roles view ─────────────────────────────────────────────────── -->
+    <div id="view-roles" class="view">
+      <div class="list-view">
+        <div class="list-header">
+          <div>
+            <h2>Roles</h2>
+            <p class="list-subtitle">Select a role to set your context — prompts are tailored to your background</p>
+          </div>
+          <button class="btn btn-primary" id="btn-new-role">
+            <i data-lucide="plus"></i> New Role
+          </button>
+        </div>
+        <div id="roles-list"></div>
+      </div>
+    </div>
+
+    <!-- ── Personas view ──────────────────────────────────────────────── -->
+    <div id="view-personas" class="view">
+      <div class="list-view">
+        <div class="list-header">
+          <div>
+            <h2>My Personas</h2>
+            <p class="list-subtitle">Define your context so AI-generated prompts are tailored to your background</p>
+          </div>
+          <button class="btn btn-primary" id="btn-new-persona">
+            <i data-lucide="plus"></i> New Persona
+          </button>
+        </div>
+        <div id="personas-list" class="cards-grid">
+          <div class="list-empty"><i data-lucide="loader"></i><p>Loading personas…</p></div>
         </div>
       </div>
     </div>
@@ -409,6 +468,165 @@
     <div class="modal-actions">
       <button class="btn btn-secondary" id="btn-trait-cancel">Cancel</button>
       <button class="btn btn-primary" id="btn-trait-confirm">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Create Template modal ──────────────────────────────────────────── -->
+<div class="modal-overlay" id="template-modal" hidden>
+  <div class="modal modal--wide modal--scroll">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <h3>New Template</h3>
+      <button class="btn-icon-sm" id="btn-template-modal-close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="form-group">
+      <label class="form-sublabel">Name *</label>
+      <input type="text" id="tmpl-name" class="input-field" placeholder="e.g. Code Review Expert" maxlength="120" />
+    </div>
+    <div class="form-group">
+      <label class="form-sublabel">Description *</label>
+      <textarea id="tmpl-description" class="input-field" style="height:auto;padding:8px 12px;" rows="2" placeholder="Brief description of what this template does" maxlength="500"></textarea>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group">
+        <label class="form-sublabel">Category *</label>
+        <input type="text" id="tmpl-category" class="input-field" placeholder="e.g. Engineering" maxlength="80" />
+      </div>
+      <div class="form-group">
+        <label class="form-sublabel">Type *</label>
+        <select id="tmpl-type" class="input-field">
+          <option value="system">System</option>
+          <option value="task">Task</option>
+          <option value="few-shot">Few-Shot</option>
+          <option value="chain-of-thought">Chain of Thought</option>
+          <option value="react">ReAct</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-sublabel">Role</label>
+      <textarea id="tmpl-role" class="input-field" style="height:auto;padding:8px 12px;" rows="2" placeholder="e.g. You are a senior software engineer…" maxlength="500"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-sublabel">Task Description *</label>
+      <textarea id="tmpl-task" class="input-field" style="height:auto;padding:8px 12px;" rows="3" placeholder="Describe the core task this template performs…" maxlength="2000"></textarea>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group">
+        <label class="form-sublabel">Tone *</label>
+        <select id="tmpl-tone" class="input-field">
+          <option value="Professional &amp; Precise">Professional &amp; Precise</option>
+          <option value="Technical &amp; Detailed">Technical &amp; Detailed</option>
+          <option value="Concise &amp; Direct">Concise &amp; Direct</option>
+          <option value="Analytical &amp; Structured">Analytical &amp; Structured</option>
+          <option value="Creative &amp; Exploratory">Creative &amp; Exploratory</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-sublabel">Output Format *</label>
+        <select id="tmpl-format" class="input-field">
+          <option value="Structured Markdown">Structured Markdown</option>
+          <option value="Plain Text">Plain Text</option>
+          <option value="JSON Schema">JSON Schema</option>
+          <option value="Numbered List">Numbered List</option>
+          <option value="Executive Report">Executive Report</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group">
+        <label class="form-sublabel">Constraints</label>
+        <input type="text" id="tmpl-constraints" class="input-field" placeholder="e.g. No external dependencies" maxlength="500" />
+      </div>
+      <div class="form-group">
+        <label class="form-sublabel">Target Model *</label>
+        <select id="tmpl-model" class="input-field">
+          <option value="claude-opus-4-6">claude-opus-4-6</option>
+          <option value="claude-sonnet-4-6" selected>claude-sonnet-4-6</option>
+          <option value="claude-haiku-4-5-20251001">claude-haiku-4-5-20251001</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btn-template-modal-cancel">Cancel</button>
+      <button class="btn btn-primary" id="btn-template-modal-save">Create Template</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Create Role modal ──────────────────────────────────────────────── -->
+<div class="modal-overlay" id="role-modal" hidden>
+  <div class="modal modal--wide modal--scroll">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <h3>New Role</h3>
+      <button class="btn-icon-sm" id="btn-role-modal-close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group">
+        <label class="form-sublabel">Role Name *</label>
+        <input type="text" id="role-name" class="input-field" placeholder="e.g. ML Platform Engineer" maxlength="120" />
+      </div>
+      <div class="form-group">
+        <label class="form-sublabel">Category *</label>
+        <select id="role-category" class="input-field">
+          <option value="Engineering">Engineering</option>
+          <option value="Architecture">Architecture</option>
+          <option value="Business">Business</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-sublabel">Description *</label>
+      <input type="text" id="role-description" class="input-field" placeholder="One-line summary of this role" maxlength="300" />
+    </div>
+    <div class="form-group">
+      <label class="form-sublabel">Context *</label>
+      <textarea id="role-context" class="input-field" style="height:auto;padding:8px 12px;" rows="5"
+        placeholder="Describe this role's background, responsibilities, and expertise. For example: I am a senior application developer with 7+ years building distributed systems and REST APIs, primarily using Java and Python in a cloud-native environment."
+        maxlength="2000"></textarea>
+      <p class="form-hint">Used as your persona context when this role is active — the AI tailors generated prompts to this background.</p>
+    </div>
+    <div class="form-group">
+      <label class="form-sublabel">Skills / Technologies</label>
+      <input type="text" id="role-skills" class="input-field" placeholder="e.g. Java, Spring Boot, AWS, PostgreSQL (comma-separated)" maxlength="500" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btn-role-modal-cancel">Cancel</button>
+      <button class="btn btn-primary" id="btn-role-modal-save">Create Role</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Create Persona modal ───────────────────────────────────────────── -->
+<div class="modal-overlay" id="persona-modal" hidden>
+  <div class="modal modal--wide modal--scroll">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <h3>New Persona</h3>
+      <button class="btn-icon-sm" id="btn-persona-modal-close" aria-label="Close"><i data-lucide="x"></i></button>
+    </div>
+    <div class="form-group">
+      <label class="form-sublabel">Name *</label>
+      <input type="text" id="persona-name" class="input-field" placeholder="e.g. Senior DevOps Engineer" maxlength="120" />
+    </div>
+    <div class="form-group">
+      <label class="form-sublabel">Description *</label>
+      <input type="text" id="persona-description" class="input-field" placeholder="e.g. My cloud infrastructure persona" maxlength="300" />
+    </div>
+    <div class="form-group">
+      <label class="form-sublabel">Context *</label>
+      <textarea id="persona-context" class="input-field" style="height:auto;padding:8px 12px;" rows="5"
+        placeholder="Describe your role, background, and expertise. For example: I am a senior platform engineer with 8+ years of experience in cloud infrastructure, working primarily with Kubernetes, Terraform, and AWS at a fintech SaaS company. I focus on reliability, security, and developer experience."
+        maxlength="2000"></textarea>
+      <p class="form-hint">This context is injected when generating prompts so the AI understands your background and tailors its output to your level and domain.</p>
+    </div>
+    <div class="form-group">
+      <label class="form-sublabel">Skills / Technologies</label>
+      <input type="text" id="persona-skills" class="input-field" placeholder="e.g. Kubernetes, Terraform, Python, AWS (comma-separated)" maxlength="500" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btn-persona-modal-cancel">Cancel</button>
+      <button class="btn btn-primary" id="btn-persona-modal-save">Create Persona</button>
     </div>
   </div>
 </div>

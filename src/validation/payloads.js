@@ -219,6 +219,12 @@ export function validateAiGeneratePayload(body) {
     name: body?.name ?? 'Generated Prompt',
   }, { partial: false })
 
+  const personaContext = sanitizeString(body?.personaContext ?? '', {
+    field: 'personaContext',
+    maxLength: 2000,
+    allowEmpty: true,
+  })
+
   return pickDefinedEntries([
     ['type', payload.type],
     ['role', payload.role],
@@ -228,7 +234,73 @@ export function validateAiGeneratePayload(body) {
     ['outputFormat', payload.outputFormat],
     ['constraints', payload.constraints],
     ['targetModel', payload.targetModel],
+    ['personaContext', personaContext],
   ])
+}
+
+export function validateRolePayload(body, { partial = false } = {}) {
+  assertPlainObject(body, 'Role payload')
+
+  let sanitizedSkills
+  if (body.skills != null) {
+    if (!Array.isArray(body.skills)) throw createValidationError('skills must be an array')
+    if (body.skills.length > 20) throw createValidationError('skills must contain 20 items or fewer')
+    sanitizedSkills = body.skills.map((s, i) =>
+      sanitizeString(s, { field: `skills[${i}]`, maxLength: 60, allowEmpty: false })
+    )
+  }
+
+  const payload = pickDefinedEntries([
+    ['name', sanitizeString(body.name, { field: 'name', maxLength: 120, allowEmpty: false })],
+    ['description', sanitizeString(body.description, { field: 'description', maxLength: 300, allowEmpty: false })],
+    ['category', sanitizeString(body.category, { field: 'category', maxLength: 80, allowEmpty: false })],
+    ['context', sanitizeString(body.context, { field: 'context', maxLength: 2000, allowEmpty: false })],
+    ['skills', partial ? sanitizedSkills : (sanitizedSkills ?? [])],
+  ])
+
+  if (!partial) {
+    for (const field of ['name', 'description', 'category', 'context']) {
+      if (!(field in payload)) throw createValidationError(`${field} is required`)
+    }
+  }
+
+  if (partial && Object.keys(payload).length === 0) {
+    throw createValidationError('No valid fields provided for update')
+  }
+
+  return payload
+}
+
+export function validatePersonaPayload(body, { partial = false } = {}) {
+  assertPlainObject(body, 'Persona payload')
+
+  let sanitizedSkills
+  if (body.skills != null) {
+    if (!Array.isArray(body.skills)) throw createValidationError('skills must be an array')
+    if (body.skills.length > 20) throw createValidationError('skills must contain 20 items or fewer')
+    sanitizedSkills = body.skills.map((s, i) =>
+      sanitizeString(s, { field: `skills[${i}]`, maxLength: 60, allowEmpty: false })
+    )
+  }
+
+  const payload = pickDefinedEntries([
+    ['name', sanitizeString(body.name, { field: 'name', maxLength: 120, allowEmpty: false })],
+    ['description', sanitizeString(body.description, { field: 'description', maxLength: 300, allowEmpty: false })],
+    ['context', sanitizeString(body.context, { field: 'context', maxLength: 2000, allowEmpty: false })],
+    ['skills', partial ? sanitizedSkills : (sanitizedSkills ?? [])],
+  ])
+
+  if (!partial) {
+    for (const field of ['name', 'description', 'context']) {
+      if (!(field in payload)) throw createValidationError(`${field} is required`)
+    }
+  }
+
+  if (partial && Object.keys(payload).length === 0) {
+    throw createValidationError('No valid fields provided for update')
+  }
+
+  return payload
 }
 
 export function validateEnhancePayload(body) {

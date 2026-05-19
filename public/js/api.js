@@ -35,8 +35,27 @@ export const promptsApi = {
 
 // ── Templates ────────────────────────────────────────────────────────────────
 export const templatesApi = {
-  list: (params = {}) => request('GET', `/api/templates?${new URLSearchParams(params)}`),
-  get:  id            => request('GET', `/api/templates/${id}`),
+  list:   (params = {}) => request('GET', `/api/templates?${new URLSearchParams(params)}`),
+  get:    id            => request('GET', `/api/templates/${id}`),
+  create: body          => request('POST', '/api/templates', body),
+  delete: id            => request('DELETE', `/api/templates/${id}`),
+}
+
+// ── Roles ─────────────────────────────────────────────────────────────────────
+export const rolesApi = {
+  list:   (params = {}) => request('GET', `/api/roles?${new URLSearchParams(params)}`),
+  get:    id            => request('GET', `/api/roles/${id}`),
+  create: body          => request('POST', '/api/roles', body),
+  delete: id            => request('DELETE', `/api/roles/${id}`),
+}
+
+// ── Personas ─────────────────────────────────────────────────────────────────
+export const personasApi = {
+  list:   ()           => request('GET', '/api/personas'),
+  get:    id           => request('GET', `/api/personas/${id}`),
+  create: body         => request('POST', '/api/personas', body),
+  update: (id, body)   => request('PUT',  `/api/personas/${id}`, body),
+  delete: id           => request('DELETE', `/api/personas/${id}`),
 }
 
 // ── AI ───────────────────────────────────────────────────────────────────────

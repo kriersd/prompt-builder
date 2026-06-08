@@ -783,6 +783,8 @@ function refreshPersonaDropdown() {
   })
 }
 
+let editingPersonaId = null
+
 async function loadPersonasList() {
   try {
     const { data } = await personasApi.list()
@@ -805,6 +807,7 @@ async function loadPersonasList() {
         ${p.skills?.length ? `<div class="card-meta">${p.skills.map(s => `<span class="card-tag">${esc(s)}</span>`).join('')}</div>` : ''}
         <div class="card-actions">
           <button class="card-btn" data-action="activate" data-id="${p._id}">Use in Editor</button>
+          <button class="card-btn" data-action="edit" data-id="${p._id}">Edit</button>
           <button class="card-btn danger" data-action="delete" data-id="${p._id}">Delete</button>
         </div>
       </div>`).join('')
@@ -823,6 +826,13 @@ async function loadPersonasList() {
         }
       })
     })
+    container.querySelectorAll('[data-action="edit"]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation()
+        const persona = data.find(p => p._id === btn.dataset.id)
+        if (persona) openEditPersonaModal(persona)
+      })
+    })
     container.querySelectorAll('[data-action="delete"]').forEach(btn => {
       btn.addEventListener('click', e => { e.stopPropagation(); deletePersona(btn.dataset.id) })
     })
@@ -833,14 +843,29 @@ async function loadPersonasList() {
 }
 
 function openCreatePersonaModal() {
+  editingPersonaId = null
   ;['persona-name', 'persona-description', 'persona-context', 'persona-skills'].forEach(id => {
     const el = $(id)
     if (el) el.value = ''
   })
+  $('persona-modal-title').textContent    = 'New Persona'
+  $('btn-persona-modal-save').textContent = 'Create Persona'
+  $('persona-modal').hidden = false
+}
+
+function openEditPersonaModal(persona) {
+  editingPersonaId = persona._id
+  $('persona-name').value        = persona.name ?? ''
+  $('persona-description').value = persona.description ?? ''
+  $('persona-context').value     = persona.context ?? ''
+  $('persona-skills').value      = (persona.skills ?? []).join(', ')
+  $('persona-modal-title').textContent    = 'Edit Persona'
+  $('btn-persona-modal-save').textContent = 'Save Changes'
   $('persona-modal').hidden = false
 }
 
 function closeCreatePersonaModal() {
+  editingPersonaId = null
   $('persona-modal').hidden = true
 }
 
@@ -858,20 +883,31 @@ async function submitCreatePersona() {
     return
   }
 
+  const isEditing = !!editingPersonaId
   const btn = $('btn-persona-modal-save')
   btn.disabled    = true
-  btn.textContent = 'Creating…'
+  btn.textContent = isEditing ? 'Saving…' : 'Creating…'
 
   try {
-    await personasApi.create({ name, description, context, skills })
-    closeCreatePersonaModal()
-    showToast(`Persona "${name}" created`)
+    if (isEditing) {
+      await personasApi.update(editingPersonaId, { name, description, context, skills })
+      if (state.activePersonaId === editingPersonaId) {
+        state.activePersona = { ...state.activePersona, name, description, context, skills }
+        $('persona-display').textContent = name
+      }
+      closeCreatePersonaModal()
+      showToast(`Persona "${name}" updated`)
+    } else {
+      await personasApi.create({ name, description, context, skills })
+      closeCreatePersonaModal()
+      showToast(`Persona "${name}" created`)
+    }
     await loadPersonasList()
   } catch (err) {
-    showToast(`Failed to create persona: ${err.message}`)
+    showToast(`Failed to ${isEditing ? 'update' : 'create'} persona: ${err.message}`)
   } finally {
     btn.disabled    = false
-    btn.textContent = 'Create Persona'
+    btn.textContent = isEditing ? 'Save Changes' : 'Create Persona'
   }
 }
 

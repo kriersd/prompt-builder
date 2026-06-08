@@ -82,7 +82,8 @@ class Collection {
   _load() {
     if (!existsSync(this._filePath)) return []
     try {
-      return JSON.parse(readFileSync(this._filePath, 'utf8'))
+      const parsed = JSON.parse(readFileSync(this._filePath, 'utf8'))
+      return Array.isArray(parsed) ? parsed : []
     } catch {
       return []
     }

@@ -38,6 +38,7 @@ export const templatesApi = {
   list:   (params = {}) => request('GET', `/api/templates?${new URLSearchParams(params)}`),
   get:    id            => request('GET', `/api/templates/${id}`),
   create: body          => request('POST', '/api/templates', body),
+  update: (id, body)    => request('PUT',  `/api/templates/${id}`, body),
   delete: id            => request('DELETE', `/api/templates/${id}`),
 }
 

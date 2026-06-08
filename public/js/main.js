@@ -513,6 +513,8 @@ async function deletePrompt(id) {
 }
 
 // ── Load templates ────────────────────────────────────────────────────────────
+let editingTemplateId = null
+
 async function loadTemplatesList() {
   try {
     const { data } = await templatesApi.list()
@@ -536,6 +538,7 @@ async function loadTemplatesList() {
         </div>
         <div class="card-actions">
           <button class="card-btn" data-action="use" data-id="${t._id}">Use Template</button>
+          <button class="card-btn" data-action="edit" data-id="${t._id}">Edit</button>
           ${!t.isDefault ? `<button class="card-btn danger" data-action="delete" data-id="${t._id}">Delete</button>` : ''}
         </div>
       </div>`).join('')
@@ -544,6 +547,13 @@ async function loadTemplatesList() {
 
     container.querySelectorAll('[data-action="use"]').forEach(btn => {
       btn.addEventListener('click', e => { e.stopPropagation(); useTemplate(btn.dataset.id) })
+    })
+    container.querySelectorAll('[data-action="edit"]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation()
+        const template = data.find(t => t._id === btn.dataset.id)
+        if (template) openEditTemplateModal(template)
+      })
     })
     container.querySelectorAll('[data-action="delete"]').forEach(btn => {
       btn.addEventListener('click', e => { e.stopPropagation(); deleteTemplate(btn.dataset.id) })
@@ -556,49 +566,76 @@ async function loadTemplatesList() {
 
 // ── Template create / delete ──────────────────────────────────────────────────
 function openCreateTemplateModal() {
-  // Reset form
+  editingTemplateId = null
   ;['tmpl-name', 'tmpl-description', 'tmpl-category', 'tmpl-role', 'tmpl-task', 'tmpl-constraints'].forEach(id => {
     const el = $(id)
     if (el) el.value = ''
   })
+  $('template-modal-title').textContent    = 'New Template'
+  $('btn-template-modal-save').textContent = 'Create Template'
+  $('template-modal').hidden = false
+}
+
+function openEditTemplateModal(template) {
+  editingTemplateId = template._id
+  $('tmpl-name').value        = template.name ?? ''
+  $('tmpl-description').value = template.description ?? ''
+  $('tmpl-category').value    = template.category ?? ''
+  $('tmpl-role').value        = template.role ?? ''
+  $('tmpl-task').value        = template.taskDescription ?? ''
+  $('tmpl-constraints').value = template.constraints ?? ''
+  $('tmpl-type').value        = template.type ?? 'system'
+  $('tmpl-tone').value        = template.tone ?? 'Professional & Precise'
+  $('tmpl-format').value      = template.outputFormat ?? 'Structured Markdown'
+  $('tmpl-model').value       = template.targetModel ?? 'claude-sonnet-4-6'
+  $('template-modal-title').textContent    = 'Edit Template'
+  $('btn-template-modal-save').textContent = 'Save Changes'
   $('template-modal').hidden = false
 }
 
 function closeCreateTemplateModal() {
+  editingTemplateId = null
   $('template-modal').hidden = true
 }
 
 async function submitCreateTemplate() {
-  const name        = $('tmpl-name').value.trim()
-  const description = $('tmpl-description').value.trim()
-  const category    = $('tmpl-category').value.trim()
-  const type        = $('tmpl-type').value
-  const role        = $('tmpl-role').value.trim()
+  const name            = $('tmpl-name').value.trim()
+  const description     = $('tmpl-description').value.trim()
+  const category        = $('tmpl-category').value.trim()
+  const type            = $('tmpl-type').value
+  const role            = $('tmpl-role').value.trim()
   const taskDescription = $('tmpl-task').value.trim()
-  const tone        = $('tmpl-tone').value
-  const outputFormat = $('tmpl-format').value
-  const constraints = $('tmpl-constraints').value.trim()
-  const targetModel = $('tmpl-model').value
+  const tone            = $('tmpl-tone').value
+  const outputFormat    = $('tmpl-format').value
+  const constraints     = $('tmpl-constraints').value.trim()
+  const targetModel     = $('tmpl-model').value
 
   if (!name || !description || !category || !taskDescription) {
     showToast('Please fill in all required fields')
     return
   }
 
+  const isEditing = !!editingTemplateId
   const btn = $('btn-template-modal-save')
-  btn.disabled = true
-  btn.textContent = 'Creating…'
+  btn.disabled    = true
+  btn.textContent = isEditing ? 'Saving…' : 'Creating…'
 
   try {
-    await templatesApi.create({ name, description, category, type, role, taskDescription, tone, outputFormat, constraints, targetModel })
-    closeCreateTemplateModal()
-    showToast(`Template "${name}" created`)
+    if (isEditing) {
+      await templatesApi.update(editingTemplateId, { name, description, category, type, role, taskDescription, tone, outputFormat, constraints, targetModel })
+      closeCreateTemplateModal()
+      showToast(`Template "${name}" updated`)
+    } else {
+      await templatesApi.create({ name, description, category, type, role, taskDescription, tone, outputFormat, constraints, targetModel })
+      closeCreateTemplateModal()
+      showToast(`Template "${name}" created`)
+    }
     await loadTemplatesList()
   } catch (err) {
-    showToast(`Failed to create template: ${err.message}`)
+    showToast(`Failed to ${isEditing ? 'update' : 'create'} template: ${err.message}`)
   } finally {
-    btn.disabled = false
-    btn.textContent = 'Create Template'
+    btn.disabled    = false
+    btn.textContent = isEditing ? 'Save Changes' : 'Create Template'
   }
 }
 

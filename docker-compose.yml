@@ -12,9 +12,9 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      DATA_DIR: /data             # persisted via volume below
+      DATA_DIR: /app/data         # persisted via volume below
     volumes:
-      - prompt-data:/data         # JSON database persisted across restarts
+      - prompt-data:/app/data     # JSON database persisted across restarts
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]

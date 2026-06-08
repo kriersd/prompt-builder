@@ -24,7 +24,7 @@ COPY --chown=promptforge:promptforge . .
 # Create the data directory at the path used by docker-compose volumes (/data).
 # Initialising it here ensures the named volume inherits the correct ownership
 # on first mount, so the non-root user can write to it.
-RUN mkdir -p /data && chown promptforge:promptforge /data
+RUN mkdir -p /app/data && chown promptforge:promptforge /app/data
 
 USER promptforge
 
@@ -33,6 +33,6 @@ EXPOSE 3000
 ENV NODE_ENV=production \
     HOST=0.0.0.0 \
     PORT=3000 \
-    DATA_DIR=/data
+    DATA_DIR=/app/data
 
 CMD ["node", "server.js"]

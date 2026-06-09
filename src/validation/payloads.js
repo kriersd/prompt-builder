@@ -83,7 +83,7 @@ function pickDefinedEntries(entries) {
 export function validatePromptPayload(body, { partial = false } = {}) {
   assertPlainObject(body, 'Prompt payload')
 
-  const role = sanitizeString(body.role, { field: 'role', maxLength: 500, allowEmpty: true })
+  const role = sanitizeString(body.role, { field: 'role', maxLength: 2000, allowEmpty: true })
   const roleTraits = sanitizeRoleTraits(body.roleTraits)
   const constraints = sanitizeString(body.constraints, {
     field: 'constraints',
@@ -146,7 +146,7 @@ export function validatePromptPayload(body, { partial = false } = {}) {
 export function validateTemplatePayload(body, { partial = false } = {}) {
   assertPlainObject(body, 'Template payload')
 
-  const role = sanitizeString(body.role, { field: 'role', maxLength: 500, allowEmpty: true })
+  const role = sanitizeString(body.role, { field: 'role', maxLength: 2000, allowEmpty: true })
   const roleTraits = sanitizeRoleTraits(body.roleTraits)
   const constraints = sanitizeString(body.constraints, {
     field: 'constraints',

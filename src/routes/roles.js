@@ -45,6 +45,21 @@ router.post('/', requireApiToken, mutateLimiter, async (req, res, next) => {
   } catch (err) { next(err) }
 })
 
+// PUT /api/roles/:id
+router.put('/:id', requireApiToken, mutateLimiter, async (req, res, next) => {
+  try {
+    const id       = validateIdParam(req.params.id)
+    const col      = getDb().collection('roles')
+    const existing = await col.findOne({ _id: id })
+    if (!existing) return res.status(404).json({ error: 'Role not found' })
+
+    const payload = validateRolePayload(req.body, { partial: true })
+    await col.updateOne({ _id: id }, { $set: payload })
+    const updated = await col.findOne({ _id: id })
+    res.json(updated)
+  } catch (err) { next(err) }
+})
+
 // DELETE /api/roles/:id  — built-in defaults cannot be deleted
 router.delete('/:id', requireApiToken, mutateLimiter, async (req, res, next) => {
   try {

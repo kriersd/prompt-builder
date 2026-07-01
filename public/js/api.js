@@ -47,6 +47,7 @@ export const rolesApi = {
   list:   (params = {}) => request('GET', `/api/roles?${new URLSearchParams(params)}`),
   get:    id            => request('GET', `/api/roles/${id}`),
   create: body          => request('POST', '/api/roles', body),
+  update: (id, body)    => request('PUT',  `/api/roles/${id}`, body),
   delete: id            => request('DELETE', `/api/roles/${id}`),
 }
 

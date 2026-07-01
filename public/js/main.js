@@ -653,6 +653,8 @@ async function deleteTemplate(id) {
 // ── Roles ─────────────────────────────────────────────────────────────────────
 const CATEGORY_ORDER = ['Engineering', 'Architecture', 'Business', 'Other']
 
+let editingRoleId = null
+
 async function loadRolesList() {
   const container = $('roles-list')
   if (!container) return
@@ -694,6 +696,8 @@ async function loadRolesList() {
               ${r.skills?.length ? `<div class="card-meta">${r.skills.map(s => `<span class="card-tag">${esc(s)}</span>`).join('')}</div>` : ''}
               <div class="card-actions">
                 <button class="card-btn" data-action="use" data-id="${r._id}">Use Role</button>
+                <button class="card-btn" data-action="edit" data-id="${r._id}">Edit</button>
+                <button class="card-btn" data-action="persona" data-id="${r._id}">Save as Persona</button>
                 ${!r.isDefault ? `<button class="card-btn danger" data-action="delete" data-id="${r._id}">Delete</button>` : ''}
               </div>
             </div>`).join('')}
@@ -709,6 +713,20 @@ async function loadRolesList() {
         e.stopPropagation()
         const role = data.find(r => r._id === btn.dataset.id)
         if (role) activateRole(role)
+      })
+    })
+    container.querySelectorAll('[data-action="edit"]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation()
+        const role = data.find(r => r._id === btn.dataset.id)
+        if (role) openEditRoleModal(role)
+      })
+    })
+    container.querySelectorAll('[data-action="persona"]').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation()
+        const role = data.find(r => r._id === btn.dataset.id)
+        if (role) openPersonaFromRole(role)
       })
     })
     container.querySelectorAll('[data-action="delete"]').forEach(btn => {
@@ -730,17 +748,43 @@ function activateRole(role) {
 }
 
 function openCreateRoleModal() {
+  editingRoleId = null
   ;['role-name', 'role-description', 'role-context', 'role-skills'].forEach(id => {
     const el = $(id)
     if (el) el.value = ''
   })
-  const cat = $('role-category')
-  if (cat) cat.value = 'Engineering'
+  $('role-category').value             = 'Engineering'
+  $('role-modal-title').textContent    = 'New Role'
+  $('btn-role-modal-save').textContent = 'Create Role'
+  $('role-modal').hidden = false
+}
+
+function openEditRoleModal(role) {
+  editingRoleId = role._id
+  $('role-name').value        = role.name ?? ''
+  $('role-description').value = role.description ?? ''
+  $('role-context').value     = role.context ?? ''
+  $('role-skills').value      = (role.skills ?? []).join(', ')
+  $('role-category').value    = role.category ?? 'Engineering'
+  $('role-modal-title').textContent    = 'Edit Role'
+  $('btn-role-modal-save').textContent = 'Save Changes'
   $('role-modal').hidden = false
 }
 
 function closeCreateRoleModal() {
+  editingRoleId = null
   $('role-modal').hidden = true
+}
+
+function openPersonaFromRole(role) {
+  editingPersonaId = null
+  $('persona-name').value        = role.name ?? ''
+  $('persona-description').value = role.description ?? ''
+  $('persona-context').value     = role.context ?? ''
+  $('persona-skills').value      = (role.skills ?? []).join(', ')
+  $('persona-modal-title').textContent    = 'New Persona'
+  $('btn-persona-modal-save').textContent = 'Create Persona'
+  $('persona-modal').hidden = false
 }
 
 async function submitCreateRole() {
@@ -758,20 +802,31 @@ async function submitCreateRole() {
     return
   }
 
+  const isEditing = !!editingRoleId
   const btn = $('btn-role-modal-save')
   btn.disabled    = true
-  btn.textContent = 'Creating…'
+  btn.textContent = isEditing ? 'Saving…' : 'Creating…'
 
   try {
-    await rolesApi.create({ name, category, description, context, skills })
-    closeCreateRoleModal()
-    showToast(`Role "${name}" created`)
+    if (isEditing) {
+      await rolesApi.update(editingRoleId, { name, category, description, context, skills })
+      if (state.activePersonaId === editingRoleId) {
+        state.activePersona = { ...state.activePersona, name, context }
+        $('persona-display').textContent = name
+      }
+      closeCreateRoleModal()
+      showToast(`Role "${name}" updated`)
+    } else {
+      await rolesApi.create({ name, category, description, context, skills })
+      closeCreateRoleModal()
+      showToast(`Role "${name}" created`)
+    }
     await loadRolesList()
   } catch (err) {
-    showToast(`Failed to create role: ${err.message}`)
+    showToast(`Failed to ${isEditing ? 'update' : 'create'} role: ${err.message}`)
   } finally {
     btn.disabled    = false
-    btn.textContent = 'Create Role'
+    btn.textContent = isEditing ? 'Save Changes' : 'Create Role'
   }
 }
 
